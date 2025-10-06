@@ -19,11 +19,15 @@ const options = {
     },
     servers: [
       {
+        url:'https://hotspot-retail-admin-backend.onrender.com',
+        description: 'Development server'
+      },
+      {
         url: process.env.BASE_URL || 'http://localhost:5000',
         description: 'Development server'
       }
     ],
-    components: {
+    components: { 
       securitySchemes: {
         bearerAuth: {
           type: 'http',
