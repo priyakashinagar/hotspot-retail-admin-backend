@@ -68,7 +68,7 @@ router.get('/health', (req, res) => {
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Welcome to Growcify Admin Backend API"
+ *                   example: "Welcome to HOTSPOT RETAIL Admin Backend API"
  *                 version:
  *                   type: string
  *                   example: "1.0.0"
@@ -76,7 +76,7 @@ router.get('/health', (req, res) => {
 router.get('/', (req, res) => {
     res.status(200).json({
         success: true,
-        message: 'Welcome to Growcify Admin Backend API',
+        message: 'Welcome to HOTSPOT RETAIL Admin Backend API',
         version: '1.0.0'
     });
 });

@@ -1,9 +1,9 @@
 /**
  * @swagger
  * info:
- *   title: Growcify Admin Backend API
+ *   title: HOTSPOT RETAIL Admin Backend API
  *   version: 1.0.0
- *   description: A comprehensive API for Growcify Admin Dashboard with authentication system
+ *   description: A comprehensive API for HOTSPOT RETAIL Admin Dashboard with authentication system
  * 
  * @swagger
  * components:

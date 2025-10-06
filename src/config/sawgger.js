@@ -5,9 +5,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Growcify Admin Backend API',
+      title: 'HOTSPOT RETAIL Admin Backend API',
       version: '1.0.0',
-      description: 'A comprehensive API for Growcify Admin Dashboard with authentication system',
+      description: 'A comprehensive API for HOTSPOT RETAIL Admin Dashboard with authentication system',
       contact: {
         name: 'Priya Kashinagar',
         email: 'priya@example.com'
@@ -211,7 +211,7 @@ const swaggerSetup = (app) => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
     explorer: true,
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'Growcify Admin API Documentation'
+    customSiteTitle: 'HOTSPOT RETAIL Admin API Documentation'
   }));
 
   // JSON endpoint for the swagger spec

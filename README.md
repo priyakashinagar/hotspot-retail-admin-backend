@@ -1,6 +1,6 @@
-# Growcify Admin Backend
+# HOTSPOT RETAIL Admin Backend
 
-A Node.js backend API for the Growcify Admin Dashboard with authentication system.
+A Node.js backend API for the HOTSPOT RETAIL Admin Dashboard with authentication system.
 
 ## Features
 
@@ -24,8 +24,8 @@ A Node.js backend API for the Growcify Admin Dashboard with authentication syste
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/priyakashinagar/growcify-admin-backend.git
-cd growcify-admin-backend
+git clone https://github.com/priyakashinagar/hotspot-retail-admin-backend.git
+cd hotspot-retail-admin-backend
 ```
 
 2. Install dependencies:
@@ -42,7 +42,7 @@ cp .env.example .env
 ```env
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/growcify-admin
+MONGODB_URI=mongodb://localhost:27017/hotspot-retail-admin
 JWT_SECRET=your-super-secret-jwt-key-here
 JWT_EXPIRES_IN=24h
 FRONTEND_URL=http://localhost:3000

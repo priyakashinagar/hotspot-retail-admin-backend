@@ -1,7 +1,7 @@
 {
-  "name": "growcify-admin-backend",
+  "name": "hotspot-retail-admin-backend",
   "version": "1.0.0",
-  "description": "Backend API for Growcify Admin Dashboard",
+  "description": "Backend API for HOTSPOT RETAIL Admin Dashboard",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://priyakashinagar@github.com/priyakashinagar/growcify-admin-backend.git"
+    "url": "git+https://priyakashinagar@github.com/priyakashinagar/hotspot-retail-admin-backend.git"
   },
   "keywords": [
     "node",
@@ -22,9 +22,9 @@
   "author": "Priya Kashinagar",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/priyakashinagar/growcify-admin-backend/issues"
+    "url": "https://github.com/priyakashinagar/hotspot-retail-admin-backend/issues"
   },
-  "homepage": "https://github.com/priyakashinagar/growcify-admin-backend#readme",
+  "homepage": "https://github.com/priyakashinagar/hotspot-retail-admin-backend#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
