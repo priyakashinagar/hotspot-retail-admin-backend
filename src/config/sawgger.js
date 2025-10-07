@@ -204,6 +204,8 @@ const options = {
   apis: [
     './src/moduls/auth/auth.router.js',
     './src/moduls/product/category.router.js',
+    './src/moduls/custommer/custommer.router.js',
+    './src/moduls/product/product.router.js',
     './src/router/index.js',
     './index.js'
   ]

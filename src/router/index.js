@@ -4,6 +4,8 @@ const router = express.Router();
 // Import route modules
 const authRoutes = require('../moduls/auth/auth.router');
 const categoryRoutes = require('../moduls/product/category.router');
+const customerRoutes = require('../moduls/custommer/custommer.router');
+const productRoutes = require('../moduls/product/product.router');
 
 /**
  * @swagger
@@ -15,6 +17,8 @@ const categoryRoutes = require('../moduls/product/category.router');
 // Use routes
 router.use('/auth', authRoutes);
 router.use('/categories', categoryRoutes);
+router.use('/customers', customerRoutes);
+router.use('/products', productRoutes);
 
 /**
  * @swagger
