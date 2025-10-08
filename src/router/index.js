@@ -6,6 +6,8 @@ const authRoutes = require('../moduls/auth/auth.router');
 const categoryRoutes = require('../moduls/product/category.router');
 const customerRoutes = require('../moduls/custommer/custommer.router');
 const productRoutes = require('../moduls/product/product.router');
+const paymentLinkRoutes = require('../moduls/paymentlink/paymentlink.router');
+const notificationRoutes = require('../moduls/notification/notification.router');
 
 /**
  * @swagger
@@ -19,6 +21,8 @@ router.use('/auth', authRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/customers', customerRoutes);
 router.use('/products', productRoutes);
+router.use('/payment-links', paymentLinkRoutes);
+router.use('/notifications', notificationRoutes);
 
 /**
  * @swagger

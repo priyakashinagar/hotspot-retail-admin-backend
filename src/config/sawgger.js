@@ -206,6 +206,8 @@ const options = {
     './src/moduls/product/category.router.js',
     './src/moduls/custommer/custommer.router.js',
     './src/moduls/product/product.router.js',
+    './src/moduls/paymentlink/paymentlink.router.js',
+    './src/moduls/notification/notification.router.js',
     './src/router/index.js',
     './index.js'
   ]
