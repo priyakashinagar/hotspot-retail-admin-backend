@@ -208,6 +208,8 @@ const options = {
     './src/moduls/product/product.router.js',
     './src/moduls/paymentlink/paymentlink.router.js',
     './src/moduls/notification/notification.router.js',
+    './src/moduls/suppliers/suppliers.router.js',
+    './src/moduls/order/purchaseorder.router.js',
     './src/router/index.js',
     './index.js'
   ]
