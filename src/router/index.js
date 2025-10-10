@@ -7,6 +7,8 @@ const categoryRoutes = require('../moduls/product/category.router');
 const customerRoutes = require('../moduls/custommer/custommer.router');
 const productRoutes = require('../moduls/product/product.router');
 const paymentLinkRoutes = require('../moduls/paymentlink/paymentlink.router');
+const employeeRoutes = require('../moduls/employee/employee.router');
+const locationRoutes = require('../moduls/location/location.router');
 
 const notificationRoutes = require('../moduls/notification/notification.router');
 const supplierRoutes = require('../moduls/suppliers/suppliers.router');
@@ -25,6 +27,8 @@ router.use('/categories', categoryRoutes);
 router.use('/customers', customerRoutes);
 router.use('/products', productRoutes);
 router.use('/payment-links', paymentLinkRoutes);
+router.use('/employees', employeeRoutes);
+router.use('/locations', locationRoutes);
 
 router.use('/notifications', notificationRoutes);
 router.use('/suppliers', supplierRoutes);
