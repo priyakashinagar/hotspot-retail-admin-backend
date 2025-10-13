@@ -35,6 +35,19 @@ const customerSchema = new mongoose.Schema({
         enum: {
             values: ['Male', 'Female', 'Other'],
             message: 'Gender must be Male, Female, or Other'
+        },
+        set: function(value) {
+            // Normalize to proper case
+            if (typeof value === 'string') {
+                const normalized = value.toLowerCase();
+                switch (normalized) {
+                    case 'male': return 'Male';
+                    case 'female': return 'Female';
+                    case 'other': return 'Other';
+                    default: return value;
+                }
+            }
+            return value;
         }
     },
     address: {
@@ -78,10 +91,27 @@ const customerSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Membership type is required'],
         enum: {
-            values: ['Regular', 'Premium', 'VIP', 'Gold', 'Silver'],
+            values: ['Regular', 'Premium', 'VIP', 'Gold', 'Silver', 'Bronze', 'Platinum'],
             message: 'Invalid membership type'
         },
-        default: 'Regular'
+        default: 'Regular',
+        set: function(value) {
+            // Normalize to proper case
+            if (typeof value === 'string') {
+                const normalized = value.toLowerCase();
+                switch (normalized) {
+                    case 'regular': return 'Regular';
+                    case 'premium': return 'Premium';
+                    case 'vip': return 'VIP';
+                    case 'gold': return 'Gold';
+                    case 'silver': return 'Silver';
+                    case 'bronze': return 'Bronze';
+                    case 'platinum': return 'Platinum';
+                    default: return value;
+                }
+            }
+            return value;
+        }
     },
     notes: {
         type: String,
