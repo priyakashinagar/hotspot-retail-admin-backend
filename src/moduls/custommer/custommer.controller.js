@@ -465,6 +465,99 @@ const getCustomerStats = async (req, res) => {
     }
 };
 
+// Get all unique cities
+const getAllCities = async (req, res) => {
+    try {
+        const cities = await Customer.distinct('city');
+        return sendSuccessResponse(res, 200, 'Cities retrieved successfully', cities.filter(city => city));
+    } catch (error) {
+        console.error('Get cities error:', error);
+        return sendErrorResponse(res, 500, 'Internal server error');
+    }
+};
+
+// Get all unique states
+const getAllStates = async (req, res) => {
+    try {
+        const states = await Customer.distinct('state');
+        return sendSuccessResponse(res, 200, 'States retrieved successfully', states.filter(state => state));
+    } catch (error) {
+        console.error('Get states error:', error);
+        return sendErrorResponse(res, 500, 'Internal server error');
+    }
+};
+
+// Get membership types
+const getMembershipTypes = async (req, res) => {
+    try {
+        const membershipTypes = ['Regular', 'Premium', 'VIP', 'Gold', 'Silver', 'Bronze', 'Platinum'];
+        return sendSuccessResponse(res, 200, 'Membership types retrieved successfully', membershipTypes);
+    } catch (error) {
+        console.error('Get membership types error:', error);
+        return sendErrorResponse(res, 500, 'Internal server error');
+    }
+};
+
+// Bulk delete customers
+const bulkDeleteCustomers = async (req, res) => {
+    try {
+        const { ids } = req.body;
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return sendErrorResponse(res, 400, 'Please provide an array of customer IDs');
+        }
+
+        // Validate all IDs
+        const invalidIds = ids.filter(id => !mongoose.Types.ObjectId.isValid(id));
+        if (invalidIds.length > 0) {
+            return sendErrorResponse(res, 400, 'Invalid customer IDs provided');
+        }
+
+        const result = await Customer.deleteMany({ _id: { $in: ids } });
+
+        return sendSuccessResponse(res, 200, `${result.deletedCount} customers deleted successfully`, { deletedCount: result.deletedCount });
+    } catch (error) {
+        console.error('Bulk delete customers error:', error);
+        return sendErrorResponse(res, 500, 'Internal server error');
+    }
+};
+
+// Bulk update membership
+const bulkUpdateMembership = async (req, res) => {
+    try {
+        const { ids, membership } = req.body;
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return sendErrorResponse(res, 400, 'Please provide an array of customer IDs');
+        }
+
+        if (!membership) {
+            return sendErrorResponse(res, 400, 'Please provide membership type');
+        }
+
+        const validMemberships = ['Regular', 'Premium', 'VIP', 'Gold', 'Silver', 'Bronze', 'Platinum'];
+        if (!validMemberships.includes(membership)) {
+            return sendErrorResponse(res, 400, 'Invalid membership type');
+        }
+
+        // Validate all IDs
+        const invalidIds = ids.filter(id => !mongoose.Types.ObjectId.isValid(id));
+        if (invalidIds.length > 0) {
+            return sendErrorResponse(res, 400, 'Invalid customer IDs provided');
+        }
+
+        const result = await Customer.updateMany(
+            { _id: { $in: ids } },
+            { $set: { membership: membership } }
+        );
+
+        return sendSuccessResponse(res, 200, `${result.modifiedCount} customers updated successfully`, { modifiedCount: result.modifiedCount });
+    } catch (error) {
+        console.error('Bulk update membership error:', error);
+        return sendErrorResponse(res, 500, 'Internal server error');
+    }
+};
+
 module.exports = {
     createCustomer,
     getAllCustomers,
@@ -474,5 +567,10 @@ module.exports = {
     deactivateCustomer,
     activateCustomer,
     searchCustomers,
-    getCustomerStats
+    getCustomerStats,
+    getAllCities,
+    getAllStates,
+    getMembershipTypes,
+    bulkDeleteCustomers,
+    bulkUpdateMembership
 };

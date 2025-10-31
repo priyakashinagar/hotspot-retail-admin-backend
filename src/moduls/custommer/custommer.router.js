@@ -9,7 +9,12 @@ const {
     deactivateCustomer,
     activateCustomer,
     searchCustomers,
-    getCustomerStats
+    getCustomerStats,
+    getAllCities,
+    getAllStates,
+    getMembershipTypes,
+    bulkDeleteCustomers,
+    bulkUpdateMembership
 } = require('./custommer.controller');
 const auth = require('../../middleware/auth.middleware');
 
@@ -365,6 +370,106 @@ const auth = require('../../middleware/auth.middleware');
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/', auth, createCustomer);
+
+/**
+ * @swagger
+ * /api/customers/dropdown/cities:
+ *   get:
+ *     summary: Get all unique cities
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cities retrieved successfully
+ */
+router.get('/dropdown/cities', auth, getAllCities);
+
+/**
+ * @swagger
+ * /api/customers/dropdown/states:
+ *   get:
+ *     summary: Get all unique states
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: States retrieved successfully
+ */
+router.get('/dropdown/states', auth, getAllStates);
+
+/**
+ * @swagger
+ * /api/customers/dropdown/memberships:
+ *   get:
+ *     summary: Get all membership types
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Membership types retrieved successfully
+ */
+router.get('/dropdown/memberships', auth, getMembershipTypes);
+
+/**
+ * @swagger
+ * /api/customers/bulk/delete:
+ *   post:
+ *     summary: Bulk delete customers
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - ids
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Customers deleted successfully
+ */
+router.post('/bulk/delete', auth, bulkDeleteCustomers);
+
+/**
+ * @swagger
+ * /api/customers/bulk/update-membership:
+ *   post:
+ *     summary: Bulk update customer membership
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - ids
+ *               - membership
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               membership:
+ *                 type: string
+ *                 enum: [Regular, Premium, VIP, Gold, Silver, Bronze, Platinum]
+ *     responses:
+ *       200:
+ *         description: Customers updated successfully
+ */
+router.post('/bulk/update-membership', auth, bulkUpdateMembership);
 
 /**
  * @swagger
