@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const employeeController = require('./employee.controller');
+const auth = require('../../middleware/auth.middleware');
 
 /**
  * @swagger
@@ -313,7 +314,7 @@ const employeeController = require('./employee.controller');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/', employeeController.getAllEmployees);
+router.get('/', auth, employeeController.getAllEmployees);
 
 /**
  * @swagger
@@ -370,7 +371,7 @@ router.get('/', employeeController.getAllEmployees);
  *       500:
  *         description: Internal server error
  */
-router.get('/stats', employeeController.getEmployeeStats);
+router.get('/stats', auth, employeeController.getEmployeeStats);
 
 /**
  * @swagger
@@ -410,7 +411,7 @@ router.get('/stats', employeeController.getEmployeeStats);
  *       500:
  *         description: Internal server error
  */
-router.get('/search/:employeeId', employeeController.searchByEmployeeId);
+router.get('/search/:employeeId', auth, employeeController.searchByEmployeeId);
 
 /**
  * @swagger
@@ -448,7 +449,7 @@ router.get('/search/:employeeId', employeeController.searchByEmployeeId);
  *       500:
  *         description: Internal server error
  */
-router.get('/:id', employeeController.getEmployeeById);
+router.get('/:id', auth, employeeController.getEmployeeById);
 
 /**
  * @swagger
@@ -498,7 +499,7 @@ router.get('/:id', employeeController.getEmployeeById);
  *       500:
  *         description: Internal server error
  */
-router.post('/', employeeController.createEmployee);
+router.post('/', auth, employeeController.createEmployee);
 
 /**
  * @swagger
@@ -542,7 +543,7 @@ router.post('/', employeeController.createEmployee);
  *       500:
  *         description: Internal server error
  */
-router.put('/:id', employeeController.updateEmployee);
+router.put('/:id', auth, employeeController.updateEmployee);
 
 /**
  * @swagger
@@ -578,7 +579,7 @@ router.put('/:id', employeeController.updateEmployee);
  *       500:
  *         description: Internal server error
  */
-router.delete('/:id', employeeController.deleteEmployee);
+router.delete('/:id', auth, employeeController.deleteEmployee);
 
 /**
  * @swagger
@@ -614,7 +615,7 @@ router.delete('/:id', employeeController.deleteEmployee);
  *       500:
  *         description: Internal server error
  */
-router.delete('/:id/permanent', employeeController.permanentDeleteEmployee);
+router.delete('/:id/permanent', auth, employeeController.permanentDeleteEmployee);
 
 /**
  * @swagger
@@ -652,6 +653,392 @@ router.delete('/:id/permanent', employeeController.permanentDeleteEmployee);
  *       500:
  *         description: Internal server error
  */
-router.patch('/:id/restore', employeeController.restoreEmployee);
+router.patch('/:id/restore', auth, employeeController.restoreEmployee);
+
+/**
+ * @swagger
+ * /api/employees/search:
+ *   get:
+ *     summary: Search employees with advanced filters
+ *     tags: [Employees]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Search query for name, email, employeeId, or mobile
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of employees per page
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [fullName, email, createdAt, updatedAt, department, position, salary]
+ *           default: createdAt
+ *         description: Field to sort by
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
+ *       - in: query
+ *         name: department
+ *         schema:
+ *           type: string
+ *         description: Filter by department
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *         description: Filter by active status
+ *       - in: query
+ *         name: position
+ *         schema:
+ *           type: string
+ *         description: Filter by position
+ *       - in: query
+ *         name: salaryMin
+ *         schema:
+ *           type: integer
+ *         description: Minimum salary filter
+ *       - in: query
+ *         name: salaryMax
+ *         schema:
+ *           type: integer
+ *         description: Maximum salary filter
+ *     responses:
+ *       200:
+ *         description: Search completed successfully
+ */
+router.get('/search', auth, employeeController.searchEmployees);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/departments:
+ *   get:
+ *     summary: Get all unique departments
+ *     tags: [Employees]
+ *     responses:
+ *       200:
+ *         description: Departments retrieved successfully
+ */
+router.get('/dropdown/departments', auth, employeeController.getAllDepartments);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/positions:
+ *   get:
+ *     summary: Get all unique positions
+ *     tags: [Employees]
+ *     responses:
+ *       200:
+ *         description: Positions retrieved successfully
+ */
+router.get('/dropdown/positions', auth, employeeController.getAllPositions);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/cities:
+ *   get:
+ *     summary: Get all unique cities
+ *     tags: [Employees]
+ *     responses:
+ *       200:
+ *         description: Cities retrieved successfully
+ */
+router.get('/dropdown/cities', auth, employeeController.getAllCities);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/states:
+ *   get:
+ *     summary: Get all unique states
+ *     tags: [Employees]
+ *     responses:
+ *       200:
+ *         description: States retrieved successfully
+ */
+router.get('/dropdown/states', auth, employeeController.getAllStates);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/qualifications:
+ *   get:
+ *     summary: Get all unique qualifications
+ *     tags: [Employees]
+ *     responses:
+ *       200:
+ *         description: Qualifications retrieved successfully
+ */
+router.get('/dropdown/qualifications', auth, employeeController.getAllQualifications);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/skills:
+ *   get:
+ *     summary: Get all unique skills
+ *     tags: [Employees]
+ *     responses:
+ *       200:
+ *         description: Skills retrieved successfully
+ */
+router.get('/dropdown/skills', auth, employeeController.getAllSkills);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/genders:
+ *   get:
+ *     summary: Get gender options
+ *     tags: [Employees]
+ *     responses:
+ *       200:
+ *         description: Gender options retrieved successfully
+ */
+router.get('/dropdown/genders', auth, employeeController.getGenderOptions);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/departments:
+ *   post:
+ *     summary: Add new department
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - department
+ *             properties:
+ *               department:
+ *                 type: string
+ *                 description: Department name
+ *     responses:
+ *       200:
+ *         description: Department validated successfully
+ */
+router.post('/dropdown/departments', auth, employeeController.addDepartment);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/positions:
+ *   post:
+ *     summary: Add new position
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - position
+ *             properties:
+ *               position:
+ *                 type: string
+ *                 description: Position name
+ *     responses:
+ *       200:
+ *         description: Position validated successfully
+ */
+router.post('/dropdown/positions', auth, employeeController.addPosition);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/cities:
+ *   post:
+ *     summary: Add new city
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - city
+ *             properties:
+ *               city:
+ *                 type: string
+ *                 description: City name
+ *     responses:
+ *       200:
+ *         description: City validated successfully
+ */
+router.post('/dropdown/cities', auth, employeeController.addCity);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/states:
+ *   post:
+ *     summary: Add new state
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - state
+ *             properties:
+ *               state:
+ *                 type: string
+ *                 description: State name
+ *     responses:
+ *       200:
+ *         description: State validated successfully
+ */
+router.post('/dropdown/states', auth, employeeController.addState);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/qualifications:
+ *   post:
+ *     summary: Add new qualification
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - qualification
+ *             properties:
+ *               qualification:
+ *                 type: string
+ *                 description: Qualification name
+ *     responses:
+ *       200:
+ *         description: Qualification validated successfully
+ */
+router.post('/dropdown/qualifications', auth, employeeController.addQualification);
+
+/**
+ * @swagger
+ * /api/employees/dropdown/skills:
+ *   post:
+ *     summary: Add new skill
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - skill
+ *             properties:
+ *               skill:
+ *                 type: string
+ *                 description: Skill name
+ *     responses:
+ *       200:
+ *         description: Skill validated successfully
+ */
+router.post('/dropdown/skills', auth, employeeController.addSkill);
+
+/**
+ * @swagger
+ * /api/employees/bulk/delete:
+ *   post:
+ *     summary: Bulk delete employees
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - ids
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of employee IDs to delete
+ *     responses:
+ *       200:
+ *         description: Employees deleted successfully
+ */
+router.post('/bulk/delete', auth, employeeController.bulkDeleteEmployees);
+
+/**
+ * @swagger
+ * /api/employees/bulk/update-department:
+ *   post:
+ *     summary: Bulk update employee department
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - ids
+ *               - department
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of employee IDs to update
+ *               department:
+ *                 type: string
+ *                 description: New department name
+ *     responses:
+ *       200:
+ *         description: Employees updated successfully
+ */
+router.post('/bulk/update-department', auth, employeeController.bulkUpdateDepartment);
+
+/**
+ * @swagger
+ * /api/employees/bulk/update-status:
+ *   post:
+ *     summary: Bulk update employee status
+ *     tags: [Employees]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - ids
+ *               - isActive
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of employee IDs to update
+ *               isActive:
+ *                 type: boolean
+ *                 description: New status (true for active, false for inactive)
+ *     responses:
+ *       200:
+ *         description: Employees updated successfully
+ */
+router.post('/bulk/update-status', auth, employeeController.bulkUpdateStatus);
 
 module.exports = router;
