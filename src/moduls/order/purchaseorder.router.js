@@ -6,9 +6,11 @@ const {
     getPurchaseOrderById,
     updatePurchaseOrder,
     deletePurchaseOrder,
+    bulkDeletePurchaseOrders,
     updateOrderStatus,
     getPurchaseOrderStats,
-    duplicatePurchaseOrder
+    duplicatePurchaseOrder,
+    exportPurchaseOrders
 } = require('./purchaseorder.controller');
 
 // Middleware for authentication (uncomment when auth is implemented)
@@ -303,6 +305,87 @@ router.get('/', getAllPurchaseOrders);
  *         description: Internal server error
  */
 router.get('/stats', getPurchaseOrderStats);
+
+/**
+ * @swagger
+ * /api/purchase-orders/export:
+ *   get:
+ *     summary: Export purchase orders to CSV
+ *     tags: [Purchase Orders]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by status
+ *       - in: query
+ *         name: vendor
+ *         schema:
+ *           type: string
+ *         description: Filter by vendor ID
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *         description: Filter by priority
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter from date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter to date
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term
+ *     responses:
+ *       200:
+ *         description: CSV file download
+ *         content:
+ *           text/csv:
+ *             schema:
+ *               type: string
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/export', exportPurchaseOrders);
+
+/**
+ * @swagger
+ * /api/purchase-orders/bulk-delete:
+ *   post:
+ *     summary: Bulk delete purchase orders
+ *     tags: [Purchase Orders]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - orderIds
+ *             properties:
+ *               orderIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of order IDs to delete
+ *     responses:
+ *       200:
+ *         description: Orders deleted successfully
+ *       400:
+ *         description: Invalid request or cannot delete shipped/delivered orders
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/bulk-delete', bulkDeletePurchaseOrders);
 
 /**
  * @swagger

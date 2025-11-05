@@ -72,10 +72,16 @@ const createPurchaseOrder = async (req, res) => {
             }
         }
 
-        // Validate vendor exists
-        const vendorExists = await mongoose.model('Supplier').findById(vendor);
-        if (!vendorExists) {
-            return sendErrorResponse(res, 404, 'Vendor not found');
+        // Validate vendor exists (skip validation if vendor is a static ID like '1', '2', etc.)
+        // This allows both database vendors and static vendors
+        if (vendor && mongoose.Types.ObjectId.isValid(vendor)) {
+            const vendorExists = await mongoose.model('Supplier').findById(vendor);
+            if (!vendorExists) {
+                console.log('⚠️ Vendor not found in database, but allowing static vendor ID:', vendor);
+                // Don't return error, allow static vendors
+            }
+        } else {
+            console.log('⚠️ Using static vendor ID:', vendor);
         }
 
         // Create purchase order
@@ -98,13 +104,27 @@ const createPurchaseOrder = async (req, res) => {
 
         await purchaseOrder.save();
 
-        // Populate vendor and product details
-        await purchaseOrder.populate([
-            { path: 'vendor', select: 'supplierName contactPerson email phone address' },
-            { path: 'orderItems.product', select: 'productName sku price' },
-            { path: 'orderItems.category', select: 'categoryName' },
-            { path: 'createdBy', select: 'name email' }
-        ]);
+        // Try to populate vendor and product details (will skip if vendor is not ObjectId)
+        try {
+            if (mongoose.Types.ObjectId.isValid(vendor)) {
+                await purchaseOrder.populate([
+                    { path: 'vendor', select: 'supplierName contactPerson email phone address' },
+                    { path: 'orderItems.product', select: 'productName sku price' },
+                    { path: 'orderItems.category', select: 'categoryName' },
+                    { path: 'createdBy', select: 'name email' }
+                ]);
+            } else {
+                // For static vendors, only populate products and categories
+                await purchaseOrder.populate([
+                    { path: 'orderItems.product', select: 'productName sku price' },
+                    { path: 'orderItems.category', select: 'categoryName' },
+                    { path: 'createdBy', select: 'name email' }
+                ]);
+            }
+        } catch (populateError) {
+            console.log('⚠️ Populate warning:', populateError.message);
+            // Continue even if populate fails
+        }
 
         return sendSuccessResponse(
             res, 
@@ -603,13 +623,139 @@ const duplicatePurchaseOrder = async (req, res) => {
     }
 };
 
+// Bulk delete purchase orders (soft delete)
+const bulkDeletePurchaseOrders = async (req, res) => {
+    try {
+        const { orderIds } = req.body;
+
+        if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+            return sendErrorResponse(res, 400, 'Order IDs array is required');
+        }
+
+        // Validate all IDs
+        const invalidIds = orderIds.filter(id => !mongoose.Types.ObjectId.isValid(id));
+        if (invalidIds.length > 0) {
+            return sendErrorResponse(res, 400, 'Invalid order IDs found');
+        }
+
+        // Find orders that cannot be deleted
+        const orders = await PurchaseOrder.find({ 
+            _id: { $in: orderIds }, 
+            isDeleted: false 
+        });
+
+        const cannotDelete = orders.filter(order => 
+            ['Shipped', 'Delivered'].includes(order.status)
+        );
+
+        if (cannotDelete.length > 0) {
+            return sendErrorResponse(
+                res, 
+                400, 
+                `Cannot delete ${cannotDelete.length} order(s) that are shipped or delivered`
+            );
+        }
+
+        // Soft delete all valid orders
+        const result = await PurchaseOrder.updateMany(
+            { 
+                _id: { $in: orderIds }, 
+                isDeleted: false,
+                status: { $nin: ['Shipped', 'Delivered'] }
+            },
+            { 
+                $set: { 
+                    isDeleted: true, 
+                    deletedAt: new Date(),
+                    updatedBy: req.user?.id
+                } 
+            }
+        );
+
+        return sendSuccessResponse(
+            res,
+            200,
+            `${result.modifiedCount} purchase order(s) deleted successfully`
+        );
+
+    } catch (error) {
+        console.error('Error bulk deleting purchase orders:', error);
+        return sendErrorResponse(res, 500, 'Internal server error while bulk deleting purchase orders');
+    }
+};
+
+// Export purchase orders to CSV
+const exportPurchaseOrders = async (req, res) => {
+    try {
+        const {
+            status,
+            vendor,
+            priority,
+            startDate,
+            endDate,
+            search
+        } = req.query;
+
+        // Build filter object
+        const filter = { isDeleted: false };
+
+        if (status) filter.status = status;
+        if (vendor) filter.vendor = vendor;
+        if (priority) filter.priority = priority;
+        if (startDate || endDate) {
+            filter.purchaseDate = {};
+            if (startDate) filter.purchaseDate.$gte = new Date(startDate);
+            if (endDate) filter.purchaseDate.$lte = new Date(endDate);
+        }
+        if (search) {
+            filter.$or = [
+                { orderNumber: { $regex: search, $options: 'i' } },
+                { notes: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Get all orders matching the filter
+        const orders = await PurchaseOrder.find(filter)
+            .populate('vendor', 'supplierName contactPerson email phone')
+            .populate('orderItems.product', 'productName sku')
+            .populate('orderItems.category', 'categoryName')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Create CSV content
+        let csvContent = 'Order Number,Vendor,Status,Priority,Payment Terms,Purchase Date,Expected Delivery,Subtotal,Tax Rate,Tax Amount,Shipping Cost,Discount,Total Amount,Items Count,Notes,Created At\n';
+
+        orders.forEach(order => {
+            const vendorName = order.vendor?.supplierName || 'N/A';
+            const purchaseDate = new Date(order.purchaseDate).toLocaleDateString('en-IN');
+            const expectedDelivery = new Date(order.expectedDelivery).toLocaleDateString('en-IN');
+            const createdAt = new Date(order.createdAt).toLocaleDateString('en-IN');
+            const notes = (order.notes || '').replace(/,/g, ';').replace(/\n/g, ' ');
+
+            csvContent += `"${order.orderNumber}","${vendorName}","${order.status}","${order.priority}","${order.paymentTerms}","${purchaseDate}","${expectedDelivery}",${order.subtotal},${order.taxRate},${order.taxAmount},${order.shippingCost},${order.discount},${order.totalAmount},${order.orderItems.length},"${notes}","${createdAt}"\n`;
+        });
+
+        // Set headers for file download
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="purchase-orders-${Date.now()}.csv"`);
+        
+        return res.status(200).send(csvContent);
+
+    } catch (error) {
+        console.error('Error exporting purchase orders:', error);
+        return sendErrorResponse(res, 500, 'Internal server error while exporting purchase orders');
+    }
+};
+
 module.exports = {
     createPurchaseOrder,
     getAllPurchaseOrders,
     getPurchaseOrderById,
     updatePurchaseOrder,
     deletePurchaseOrder,
+    bulkDeletePurchaseOrders,
     updateOrderStatus,
     getPurchaseOrderStats,
-    duplicatePurchaseOrder
+    duplicatePurchaseOrder,
+    exportPurchaseOrders
 };
