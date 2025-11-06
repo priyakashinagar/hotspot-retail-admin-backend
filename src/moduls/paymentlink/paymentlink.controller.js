@@ -32,6 +32,10 @@ const sendSuccessResponse = (res, statusCode, message, data = null) => {
 // Create a new payment link
 const createPaymentLink = async (req, res) => {
     try {
+        console.log('\n========== CREATE PAYMENT LINK START ==========');
+        console.log('📥 Request Body:', JSON.stringify(req.body, null, 2));
+        console.log('👤 User ID:', req.user.id);
+        
         const {
             title,
             amount,
@@ -47,19 +51,17 @@ const createPaymentLink = async (req, res) => {
             metadata
         } = req.body;
 
-        // Check if payment link with same title already exists for this user
-        const existingPaymentLink = await PaymentLink.findOne({
-            title: title.trim(),
-            createdBy: req.user.id,
-            status: { $ne: 'Cancelled' }
-        });
-
-        if (existingPaymentLink) {
-            return sendErrorResponse(res, 409, 'Payment link with this title already exists');
-        }
+        console.log('🔍 Skipping title uniqueness check - allowing duplicate titles');
+        console.log('   User ID:', req.user.id);
+        console.log('   Title:', title?.trim());
+        
+        // NOTE: Removed title uniqueness check - users can create multiple links with same title
+        // This is intentional to allow flexibility
+        
+        console.log('✅ Proceeding to create payment link...');
 
         // Create new payment link
-        const paymentLink = new PaymentLink({
+        const paymentLinkData = {
             title: title.trim(),
             amount,
             currency: currency || 'INR',
@@ -73,23 +75,49 @@ const createPaymentLink = async (req, res) => {
             paymentGateway: paymentGateway || 'Razorpay',
             createdBy: req.user.id,
             metadata: metadata || {}
-        });
-
+        };
+        
+        console.log('📝 Payment link data prepared:', JSON.stringify(paymentLinkData, null, 2));
+        
+        const paymentLink = new PaymentLink(paymentLinkData);
+        
+        console.log('💾 Attempting to save payment link...');
         const savedPaymentLink = await paymentLink.save();
+        
+        console.log('✅ Payment link saved successfully!');
+        console.log('   ID:', savedPaymentLink._id);
+        console.log('   PaymentLinkId:', savedPaymentLink.paymentLinkId);
         
         // Populate created by user details
         await savedPaymentLink.populate('createdBy', 'name email');
 
+        console.log('========== CREATE PAYMENT LINK SUCCESS ==========\n');
         return sendSuccessResponse(res, 201, 'Payment link created successfully', savedPaymentLink);
     } catch (error) {
-        console.error('Create payment link error:', error);
+        console.error('\n❌❌❌ CREATE PAYMENT LINK ERROR ❌❌❌');
+        console.error('Error Name:', error.name);
+        console.error('Error Message:', error.message);
+        console.error('Error Code:', error.code);
+        
+        if (error.code === 11000) {
+            console.error('🔴 DUPLICATE KEY ERROR!');
+            console.error('Duplicate Key Info:', JSON.stringify(error.keyValue, null, 2));
+            console.error('Duplicate Key Pattern:', JSON.stringify(error.keyPattern, null, 2));
+        }
+        
+        console.error('Full Error:', error);
+        console.error('========== CREATE PAYMENT LINK ERROR END ==========\n');
         
         if (error.name === 'ValidationError') {
             const errors = Object.values(error.errors).map(e => e.message);
             return sendErrorResponse(res, 400, 'Validation Error', errors);
         }
         
-        return sendErrorResponse(res, 500, 'Internal server error');
+        if (error.code === 11000) {
+            return sendErrorResponse(res, 409, 'Duplicate entry - Payment link with this information already exists');
+        }
+        
+        return sendErrorResponse(res, 500, 'Internal server error', error.message);
     }
 };
 

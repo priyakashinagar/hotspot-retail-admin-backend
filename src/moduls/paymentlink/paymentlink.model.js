@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 const paymentLinkSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: [true, 'Payment link title is required'],
+        // required: [true, 'Payment link title is required'],
         trim: true,
         minlength: [3, 'Title must be at least 3 characters'],
         maxlength: [200, 'Title cannot exceed 200 characters']
     },
     amount: {
         type: Number,
-        required: [true, 'Amount is required'],
+        // required: [true, 'Amount is required'],
         min: [0.01, 'Amount must be greater than 0'],
         validate: {
             validator: function(value) {
@@ -21,7 +21,7 @@ const paymentLinkSchema = new mongoose.Schema({
     },
     currency: {
         type: String,
-        required: [true, 'Currency is required'],
+        // required: [true, 'Currency is required'],
         enum: {
             values: ['INR', 'USD', 'EUR', 'GBP'],
             message: 'Currency must be INR, USD, EUR, or GBP'
@@ -35,7 +35,7 @@ const paymentLinkSchema = new mongoose.Schema({
     },
     customerEmail: {
         type: String,
-        required: [true, 'Customer email is required'],
+        // required: [true, 'Customer ema.il is required'],
         lowercase: true,
         trim: true,
         match: [
@@ -52,9 +52,21 @@ const paymentLinkSchema = new mongoose.Schema({
         type: Date,
         validate: {
             validator: function(value) {
-                return !value || value > new Date();
+                // Allow null, undefined, or empty values
+                if (!value || value === null || value === undefined) return true;
+                
+                // Get start of today (00:00:00)
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // Get start of expiry date (00:00:00)
+                const expiryDay = new Date(value);
+                expiryDay.setHours(0, 0, 0, 0);
+                
+                // Allow today or future dates
+                return expiryDay >= today;
             },
-            message: 'Expiry date must be in the future'
+            message: 'Expiry date cannot be in the past'
         }
     },
     allowPartialPayment: {
@@ -72,11 +84,12 @@ const paymentLinkSchema = new mongoose.Schema({
     paymentLinkId: {
         type: String,
         unique: true,
-        required: true
+        required: false  // Will be auto-generated in pre-save hook
     },
     shortUrl: {
         type: String,
-        unique: true
+        unique: true,
+        sparse: true  // Allow multiple null/undefined values
     },
     status: {
         type: String,
@@ -153,7 +166,7 @@ const paymentLinkSchema = new mongoose.Schema({
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        // required: true
     },
     isActive: {
         type: Boolean,
@@ -169,7 +182,7 @@ const paymentLinkSchema = new mongoose.Schema({
 });
 
 // Indexes for better performance
-paymentLinkSchema.index({ paymentLinkId: 1 });
+// Note: paymentLinkId already has unique: true in schema, so no need for separate index
 paymentLinkSchema.index({ customerEmail: 1 });
 paymentLinkSchema.index({ status: 1 });
 paymentLinkSchema.index({ paymentStatus: 1 });
@@ -196,36 +209,52 @@ paymentLinkSchema.virtual('paymentUrl').get(function() {
 
 // Pre-save middleware to generate payment link ID
 paymentLinkSchema.pre('save', function(next) {
-    if (!this.paymentLinkId) {
-        this.paymentLinkId = generatePaymentLinkId();
+    try {
+        console.log('\n🔧 PRE-SAVE HOOK STARTED');
+        console.log('   Document ID:', this._id);
+        console.log('   Is New Document:', this.isNew);
+        
+        // Generate payment link ID if not present
+        if (!this.paymentLinkId) {
+            const timestamp = Date.now().toString(36);
+            const randomStr1 = Math.random().toString(36).substring(2, 8);
+            const randomStr2 = Math.random().toString(36).substring(2, 5);
+            this.paymentLinkId = `PL_${timestamp}_${randomStr1}${randomStr2}`.toUpperCase();
+            console.log('   ✅ Generated PaymentLinkId:', this.paymentLinkId);
+        } else {
+            console.log('   ℹ️  PaymentLinkId already exists:', this.paymentLinkId);
+        }
+        
+        // Update remaining amount
+        this.remainingAmount = Math.max(0, this.amount - this.paidAmount);
+        console.log('   💰 Calculated remainingAmount:', this.remainingAmount);
+        
+        // Update status based on payment
+        if (this.paidAmount >= this.amount) {
+            this.status = 'Paid';
+            this.paymentStatus = 'Completed';
+            console.log('   📊 Status updated to: Paid');
+        } else if (this.paidAmount > 0) {
+            this.status = 'Partially Paid';
+            this.paymentStatus = 'Partially Paid';
+            console.log('   📊 Status updated to: Partially Paid');
+        } else {
+            console.log('   📊 Status remains:', this.status);
+        }
+        
+        // Check expiry
+        if (this.expiryDate && this.expiryDate < new Date() && this.status === 'Active') {
+            this.status = 'Expired';
+            console.log('   ⏰ Status changed to Expired due to expiry date');
+        }
+        
+        console.log('🔧 PRE-SAVE HOOK COMPLETED\n');
+        next();
+    } catch (error) {
+        console.error('\n❌ PRE-SAVE HOOK ERROR:', error);
+        next(error);
     }
-    
-    // Update remaining amount
-    this.remainingAmount = Math.max(0, this.amount - this.paidAmount);
-    
-    // Update status based on payment
-    if (this.paidAmount >= this.amount) {
-        this.status = 'Paid';
-        this.paymentStatus = 'Completed';
-    } else if (this.paidAmount > 0) {
-        this.status = 'Partially Paid';
-        this.paymentStatus = 'Partially Paid';
-    }
-    
-    // Check expiry
-    if (this.expiryDate && this.expiryDate < new Date() && this.status === 'Active') {
-        this.status = 'Expired';
-    }
-    
-    next();
 });
-
-// Static method to generate unique payment link ID
-function generatePaymentLinkId() {
-    const timestamp = Date.now().toString(36);
-    const randomStr = Math.random().toString(36).substring(2, 8);
-    return `PL_${timestamp}_${randomStr}`.toUpperCase();
-}
 
 // Static method to search payment links
 paymentLinkSchema.statics.searchPaymentLinks = function(searchTerm, options = {}) {
